@@ -183,6 +183,26 @@ function conditionsFilterFunction(loc){
 			});
 		}
 	}
+        choices = choices.sort(
+        function(a, b)
+        {
+                        if(a.path.showOrder < b.path.showOrder)
+                            return -1;
+                        else if(a.path.showOrder > b.path.showOrder)
+                            return 1;
+                        else{
+                            //return 0;
+                            var r = Math.random() * 9;
+                            if( r < 3 )
+                                return -1;
+                            if( r < 6 )
+                                return 0;
+                            return 1
+
+                        }
+
+
+        });
 	return choices;
 }
 
@@ -326,15 +346,18 @@ function AddShowRanges( varName, ranges, texts, show0 ){
 }
 
 function SetPathPriority( pathId, value ){
-	pathPriorityMap[ pathId ] = value;
+        //pathPriorityMap[ pathId ] = value;
+    player.findPath(pathId).priority = value;
 }
 
 function SetPathPassability( pathId, value ){
-	pathPassabilityMap[ pathId ] = value;
+        //pathPassabilityMap[ pathId ] = value;
+    player.findPath(pathId).passability = value;
 }
 
 function SetPathShowOrder( pathId, value ){
-	pathShowOrderMap[ pathId ] = value;
+        //pathShowOrderMap[ pathId ] = value;
+    player.findPath(pathId).showOrder = value;
 }
 
 function AddLocationTexts( locationId, f, texts ){
@@ -393,11 +416,16 @@ function locationPaths( location ){
 
 function TrLocationTexts(){
 	var t;
-	if( location ){
-		t = locationTextsMap[location.id] 
+        if( loc ){
+                t = locationTextsMap[loc.id]
 		if(t){
-			var n = t.func.call();
-			text = t.texts[n];
+                    var n = t.func()-1;
+                    if( n < 0 )
+                        player.setText( t.texts[0]);
+                    else if( n >= t.texts.length )
+                        player.setText( t.texts[t.texts.length-1]);
+                    else
+                        player.setText(t.texts[n]);
 		}
 	}
 }

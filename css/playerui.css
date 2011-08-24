@@ -1,6 +1,6 @@
 .textField {
 	width : 600px;
-	height : 600px;
+        height : 400px;
 	border: 1px solid;
 	padding : 7px;
 	background-color : #2F393C;
@@ -18,7 +18,7 @@ body {
 
 .statusField {
 	width : 200px;
-	height : 600px;
+        height : 400px;
 	border: 1px solid;
 	padding : 7px;
 	text-align : center; 

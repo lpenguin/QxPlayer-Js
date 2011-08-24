@@ -13,7 +13,15 @@ var Player = function(){
 		}
 		return null;
 	};
-	
+
+    this.findPath = function(id){
+        for(var i in this.locations){
+            for(var j in this.locations[i].paths)
+                if(this.locations[i].paths[j].id == id)
+                    return this.locations[i].paths[j];
+        }
+        return null;
+    }
 	this.startLocation = function(){
 		for( var i in this.locations){
 			if( this.locations[i].type == "start")

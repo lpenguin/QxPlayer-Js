@@ -9,30 +9,35 @@
 <script type="text/javascript" src="js/playerUI.js" ></script>
 <script type="text/javascript" src="js/mainFunctions.js"></script>
 <script type="text/javascript" src="js/jquery-1.6.2.min.js" ></script>
-<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js" ></script>
+<!--<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js" ></script>-->
 <script type="text/javascript" src="js/gridUI.js"></script>
 <script type="text/javascript">
 var player, ui;
+function init(path){
+    ui = new PlayerUI({
+            textField : $("#textField"),
+            statusField : $("#statusField"),
+            choiceSelect : $("#choiceSelect")
+    });
+    player = new Player();
+    ui.setPlayer(player);
+    player.setUI(ui);
+    player.load(path, function(){
+            player.init();
+            player.actions();
+            for(var i in player.locations){
+                    player.locations[i].init();
+                    for(var j in player.locations[i].paths){
+                            player.locations[i].paths[j].init();
+                    }
+            }
+            initPlayer();
+    });
+}
 	$(document).ready(function(){	
-		ui = new PlayerUI({
-			textField : $("#textField"),
-			statusField : $("#statusField"),
-			choiceSelect : $("#choiceSelect")
-		});
-		player = new Player();
-		ui.setPlayer(player);
-		player.setUI(ui);
-		player.load("test.qxm", function(){
-			player.init();
-			player.actions();
-			for(var i in player.locations){
-				player.locations[i].init();
-				for(var j in player.locations[i].paths){
-					player.locations[i].paths[j].init();
-				}
-			}
-			initPlayer();
-		});
+            $.getJSON( "quest.info", function(data){
+                init(data.path);
+            });
 	});
 </script>
 </head>
