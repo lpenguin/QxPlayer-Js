@@ -1,0 +1,58 @@
+<html>
+<head>
+<title>Player</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="css/playerui.css" type="text/css">
+  
+<script type="text/javascript" src="js/misc.js" ></script>
+<script type="text/javascript" src="js/player.js" ></script>
+<script type="text/javascript" src="js/playerUI.js" ></script>
+<script type="text/javascript" src="js/mainFunctions.js"></script>
+<script type="text/javascript" src="js/jquery-1.6.2.min.js" ></script>
+<script type="text/javascript" src="js/jquery-ui-1.8.16.custom.min.js" ></script>
+<script type="text/javascript" src="js/gridUI.js"></script>
+<script type="text/javascript">
+var player, ui;
+	$(document).ready(function(){	
+		ui = new PlayerUI({
+			textField : $("#textField"),
+			statusField : $("#statusField"),
+			choiceSelect : $("#choiceSelect")
+		});
+		player = new Player();
+		ui.setPlayer(player);
+		player.setUI(ui);
+		player.load("test.qxm", function(){
+			player.init();
+			player.actions();
+			for(var i in player.locations){
+				player.locations[i].init();
+				for(var j in player.locations[i].paths){
+					player.locations[i].paths[j].init();
+				}
+			}
+			initPlayer();
+		});
+	});
+</script>
+</head>
+<body>
+	<table>
+		<tr>
+			<td>
+				<div id="textField" class="textField" ></div>
+			</td>
+			<td>
+				<div id="statusField" class="statusField"></div>
+			</td>
+		</tr>
+		<tr>
+			<td colspan=2>
+				<div id="choiceSelect" class="choiceSelect"></div>
+			</td>
+			<td></td>
+		</tr>
+	</table>
+	<div id='error'></div>
+</body>
+</html>

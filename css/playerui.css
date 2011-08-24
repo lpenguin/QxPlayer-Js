@@ -1,0 +1,57 @@
+.textField {
+	width : 600px;
+	height : 600px;
+	border: 1px solid;
+	padding : 7px;
+	background-color : #2F393C;
+	color : #E0E2E4;
+	font-family: Arial, sans-serif;
+	font-size: 15px;
+	overflow-y : auto;
+}
+
+body {
+	background-color : #ECECEC;
+	font-family: Arial, sans-serif;
+	font-size: 15px;
+}
+
+.statusField {
+	width : 200px;
+	height : 600px;
+	border: 1px solid;
+	padding : 7px;
+	text-align : center; 
+	background-color : #2F393C;
+	color : #E0E2E4;
+	font-family: Arial, sans-serif;
+	font-size: 15px;
+}
+
+.choiceSelect {
+	width : 840px;
+	height : 200px;
+	border: 1px solid;
+	overflow-y : auto;
+	background-color : #2F393C;
+	color : #E0E2E4;
+	font-family: Arial, sans-serif;
+	font-size: 15px;
+}
+
+.gridTable {
+	width : 100%;
+	/*border: 1px solid;*/
+}
+
+.gridCell {
+	padding: 3px;
+	color : #E0E2E4;
+	font-family: Arial, sans-serif;
+	font-size: 15px;
+}
+
+.gridCellHovered {
+	background-color : #404E52;
+	cursor : pointer;
+}
