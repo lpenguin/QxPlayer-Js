@@ -249,7 +249,7 @@ function sortChoicesTGE(a, b){
 function pathFromSporGroup( paths ){
     var priorityTotal = 0;
     if(paths.length == 1)
-        return paths[0];
+
     paths = paths.sort(function(a,b){ return a.priority - b.priority;});
     var newPaths = [];
     for(var i in paths){
@@ -297,54 +297,42 @@ function getSporGroupsMap( paths ){
 
 function conditionsFilterFunction(loc){
     var choices = [];
-    var groups = getSporGroupsMap(loc.paths) ;
-    for(var q in groups){
-        var group = groups[q];
-        if( group.length == 1 ){
-            var path = group[0];
-        }else{
-            var path = pathFromSporGroup(group);
-        }
-    }
-
+    var groups = {};
+    var path, g;
     for(var i in loc.paths){
-        var path = loc.paths[i];
-
-        if( !path.passability )
+        path = loc.paths[i];
+        if( path.passability != 'inf' && ! path.passability)
             continue;
+        path.condRes = path.conditions() && ( path.passability == 'inf' || path.passability );
+        if( g = groups[path.question]){
+            g.push(path);
+        }else
+            groups[path.question] = [path];
+    }
 
-        var c = path.conditions();
-        path.condRes = c;
-        if( c || path.alwaysShow){
-            var g;
-            if( g = sporGroupsMap[path.question] ){
-                g.push(path);
-            }else{
-                sporGroupsMap[path.question] = [ path ];
-            }
+
+    for(var q in groups){
+        g = groups[q];
+        if(g.length == 1){
+            path = g[0];
+            if( !(Math.random() < path.priority))
+                continue;
+
+            if((! path.condRes )&& !path.alwaysShow)
+                    continue;
+        }else{
+            path = pathFromSporGroup(g);
+            if(!path)
+                continue;
         }
+        choices.push({
+                text : path.question,
+                actions : function(){onAnyPathEnter(this.path);},//loc.paths[i].actions,
+                path : path,
+                style : path.condRes ? 'default' : 'disabled'
+        });
     }
 
-    for(var text in sporGroupsMap){
-        var g = sporGroupsMap[text];
-        var path = pathFromSporGroup(g);
-        if(!path)
-            continue;
-        if( g.length == 1 && Math.random() >= path.priority)
-            continue;
-        //if( !path.passability )
-        //    continue;
-
-        //var c = path.conditions();
-        //if( c || path.alwaysShow){
-            choices.push({
-                    text : path.question,
-                    actions : function(){onAnyPathEnter(this.path);},//loc.paths[i].actions,
-                    path : path,
-                    style : path.condRes ? 'default' : 'disabled'
-            });
-       // }
-    }
 
     choices = choices.sort(sortChoicesTGE);
     //choices = choices.reverse();
@@ -586,12 +574,11 @@ function TrLocationTexts(){
                 t = loc.texts;
 		if(t){
                     var n = t.func()-1;
-                    if( n < 0 )
-                        player.setText( t.texts[0]);
-                    else if( n >= t.texts.length )
-                        player.setText( t.texts[t.texts.length-1]);
-                    else
+                    if( n >= 0 && n < t.texts.length)
                         player.setText(t.texts[n]);
+                    else
+                        player.setText(t.texts[Math.floor(Math.random()*t.texts.length)]);
+
 		}
 	}
 }
