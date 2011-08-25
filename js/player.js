@@ -35,6 +35,8 @@ var Player = function(){
 	};
 
         this.replaceStrings = function(text){
+            if(text == undefined)
+                text = "";
             for(var name in globals.vars){
                 re = new RegExp("\<"+name+"\>", 'g');
                 text = text.replace(re, globals[name])

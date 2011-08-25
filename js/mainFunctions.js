@@ -222,9 +222,9 @@ function defaultChoicesFilterFunction(loc){
 
 function sortChoicesTGE(a, b){
     if( a.style == 'disabled' && b.style != 'disabled')
-        return -1;
-    else if( a.style != 'disabled' && b.style == 'disabled')
         return 1;
+    else if( a.style != 'disabled' && b.style == 'disabled')
+        return -1;
     else if(a.style == 'disabled' && b.style == 'disabled')
         return 0;
     else
@@ -248,10 +248,20 @@ function sortChoicesTGE(a, b){
 
 function pathFromSporGroup( paths ){
     var priorityTotal = 0;
+    if(paths.length == 1)
+        return paths[0];
     paths = paths.sort(function(a,b){ return a.priority - b.priority;});
+    var newPaths = [];
     for(var i in paths){
-        priorityTotal += paths[i].priority;
+        if( paths[i].condRes){
+            priorityTotal += paths[i].priority;
+            newPaths.push(paths[i]);
+        }
     }
+
+    paths = newPaths;
+    if(!paths.length)
+        return null;
     var priorityCounter = 0;
     var rnd = Math.random()*priorityTotal;
     for(var i in paths){
@@ -263,40 +273,81 @@ function pathFromSporGroup( paths ){
     return null;
 }
 
-function conditionsFilterFunction(loc){
-    var choices = [];
+function getSporGroupsMap( paths ){
     var sporGroupsMap = {};
-    //var sporGroups = [];
-    for(var i in loc.paths){
-        var path = loc.paths[i];
+    var textMap = {}
+    for(var i in paths){
+        var path = paths[i];
+        path.condRes = path.conditions();
         var g;
-        if( g = sporGroupsMap[path.question] ){
+        if( g = textMap[path.question] ){
             g.push(path);
+            var sg;
+            if( sg = sporGroupsMap[path.question]){
+                sg.push(path);
+            }else{
+                sg = [path];
+            }
         }else{
-            sporGroupsMap[path.question] = [ path ];
+            textMap[path.question] = [ path ];
         }
     }
-    for(var text in sporGroupsMap){
-        var g = sporGroupsMap[text];
-        var path = pathFromSporGroup(g);
-        if( g.length == 1 && Math.random() >= path.priority)
-            continue;
+    return sporGroupsMap;
+}
+
+function conditionsFilterFunction(loc){
+    var choices = [];
+    var groups = getSporGroupsMap(loc.paths) ;
+    for(var q in groups){
+        var group = groups[q];
+        if( group.length == 1 ){
+            var path = group[0];
+        }else{
+            var path = pathFromSporGroup(group);
+        }
+    }
+
+    for(var i in loc.paths){
+        var path = loc.paths[i];
+
         if( !path.passability )
             continue;
 
         var c = path.conditions();
+        path.condRes = c;
         if( c || path.alwaysShow){
+            var g;
+            if( g = sporGroupsMap[path.question] ){
+                g.push(path);
+            }else{
+                sporGroupsMap[path.question] = [ path ];
+            }
+        }
+    }
+
+    for(var text in sporGroupsMap){
+        var g = sporGroupsMap[text];
+        var path = pathFromSporGroup(g);
+        if(!path)
+            continue;
+        if( g.length == 1 && Math.random() >= path.priority)
+            continue;
+        //if( !path.passability )
+        //    continue;
+
+        //var c = path.conditions();
+        //if( c || path.alwaysShow){
             choices.push({
                     text : path.question,
                     actions : function(){onAnyPathEnter(this.path);},//loc.paths[i].actions,
                     path : path,
-                    style : c ? 'default' : 'disabled'
+                    style : path.condRes ? 'default' : 'disabled'
             });
-        }
+       // }
     }
 
     choices = choices.sort(sortChoicesTGE);
-    choices = choices.reverse();
+    //choices = choices.reverse();
     return choices;
 }
 
@@ -461,7 +512,7 @@ function SetPathAlwaysShow( pathId ){
 }
 
 function AddLocationTexts( locationId, f, texts ){
-	locationTextsMap[locationId] = {
+        player.find(locationId).texts = {
 		"func":f,
 		"texts":texts
 		};
@@ -474,6 +525,17 @@ function AddToVars(name){
 function SetLocationEmpty( locationId ){
 	player.find(locationId).isEmpty = 1;
 	//locationEmptyMap[locationId] = 1;
+}
+
+function switchLocationText(){
+    if(!loc)
+        return;
+    if( loc.currentText == undefined )
+        loc.currentText = -1;
+    loc.currentText++;
+    if( loc.currentText >= loc.texts.texts.length)
+        loc.currentText = 0;
+    return loc.currentText+1;
 }
 
 function CheckConstraints( varName ){
@@ -521,7 +583,7 @@ function locationPaths( location ){
 function TrLocationTexts(){
 	var t;
         if( loc ){
-                t = locationTextsMap[loc.id]
+                t = loc.texts;
 		if(t){
                     var n = t.func()-1;
                     if( n < 0 )
