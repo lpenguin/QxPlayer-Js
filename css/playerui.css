@@ -55,3 +55,6 @@ body {
 	background-color : #404E52;
 	cursor : pointer;
 }
+.pathDisabled {
+    background-color : #2F393C;
+}

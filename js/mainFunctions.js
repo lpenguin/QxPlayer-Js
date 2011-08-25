@@ -174,35 +174,46 @@ function conditionsFilterFunction(loc){
 	var choices = [];
 	for(var i in loc.paths){
 		var path = loc.paths[i];
-		if( path.conditions() ){
+                var c = path.conditions();
+                if( c || path.alwaysShow){
 			choices.push({
 				text : path.question,
 				actions : function(){onAnyPathEnter(this.path);},//loc.paths[i].actions,
 				path : path,
-				style : 'default'
+                                style : c ? 'default' : 'disabled'
 			});
 		}
 	}
         choices = choices.sort(
         function(a, b)
         {
-                        if(a.path.showOrder < b.path.showOrder)
-                            return -1;
-                        else if(a.path.showOrder > b.path.showOrder)
-                            return 1;
-                        else{
-                            //return 0;
-                            var r = Math.random() * 9;
-                            if( r < 3 )
-                                return -1;
-                            if( r < 6 )
-                                return 0;
-                            return 1
+            if( a.style == 'disabled' && b.style != 'disabled')
+                return -1;
+            else if( a.style != 'disabled' && b.style == 'disabled')
+                return 1;
+            else if(a.style == 'disabled' && b.style == 'disabled')
+                return 0;
+            else
+            {
+                if(a.path.showOrder < b.path.showOrder)
+                    return -1;
+                else if(a.path.showOrder > b.path.showOrder)
+                    return 1;
+                else{
+                    //return 0;
+                    var r = Math.random() * 9;
+                    if( r < 3 )
+                        return -1;
+                    if( r < 6 )
+                        return 0;
+                    return 1
 
-                        }
+                }
+            }
 
 
         });
+        choices = choices.reverse();
 	return choices;
 }
 
@@ -358,6 +369,10 @@ function SetPathPassability( pathId, value ){
 function SetPathShowOrder( pathId, value ){
         //pathShowOrderMap[ pathId ] = value;
     player.findPath(pathId).showOrder = value;
+}
+
+function SetPathAlwaysShow( pathId ){
+    player.findPath(pathId).alwaysShow = true;
 }
 
 function AddLocationTexts( locationId, f, texts ){

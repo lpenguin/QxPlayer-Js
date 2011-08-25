@@ -10,13 +10,14 @@
         	   $(this).append(this.table);
         	   //$(this).append('aa');
            };
-           this.addItem = function(text){
+           this.addItem = function(text, styleClass){
         	   var self = this;
         	   var index = this.table.find('tr').length;
         	   var tr = $('<tr></tr>');
         	   var td = $('<td></td>');
         	   var div = $('<div>'+text+'</div>');
-        	   
+                   if(styleClass)
+                       div.addClass( styleClass );
         	   div.click(function(){
         		   self.clickFunction(index);
         	   });

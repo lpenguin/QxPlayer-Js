@@ -29,6 +29,10 @@ var PlayerUI = function(initObj){
 	};
 	
 	this.addChoice = function(choice){
+            if(choice.style == 'disabled'){
+                choice.actions = function(){};
+                this.choiceSelect.addItem(choice.text, 'pathDisabled');
+            }else
 		this.choiceSelect.addItem(choice.text);
 		//var html = this.choiceSelect.html();
 		//this.choiceSelect.html(choice.text+ "<br \>"+html);
