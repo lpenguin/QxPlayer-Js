@@ -1,0 +1,13 @@
+{"actions":"",
+ "name":"",
+ "description":"",
+ "libraries":[""],
+ "vers":[
+  {"id":"L1",
+   "actions":"$.getJSON('quests.json', function(data){\n\tfor(var i in data.quests){\n\t\tvar quest = data.quests[i];\n\t\tplayer.addChoice({\n\t\t\ttext : quest.name,\n\t\t\tquest : quest,\n\t\t\tactions : function(){\n\t\t\t\tplayer.load(this.quest.url, function(){\n\t\t\t\t\tinitPlayer();\n\t\t\t\t});\n\t\t\t}\n\t\t});\n\t}\n});",
+   "text":"Выберите квест",
+   "type":"start",
+   "edges":[
+   ],
+   "x":"268",
+   "y":"172"}]}
