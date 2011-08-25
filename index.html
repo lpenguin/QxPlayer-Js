@@ -24,14 +24,6 @@ function init(path){
     ui.setPlayer(player);
     player.setUI(ui);
     player.load(path, function(){
-            player.init();
-            player.actions();
-            for(var i in player.locations){
-                    player.locations[i].init();
-                    for(var j in player.locations[i].paths){
-                            player.locations[i].paths[j].init();
-                    }
-            }
             initPlayer();
     });
 }

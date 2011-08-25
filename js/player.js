@@ -33,13 +33,22 @@ var Player = function(){
 	this.setUI = function(ui){
 		this.ui = ui;
 	};
-	
+
+        this.replaceStrings = function(text){
+            for(var name in globals.vars){
+                re = new RegExp("\<"+name+"\>", 'g');
+                text = text.replace(re, globals[name])
+            }
+            return text;
+        };
+
 	this.setText = function( text ){
-		this.ui.setText( text );
+
+            this.ui.setText( this.replaceStrings(text) );
 	};
 
 	this.getText = function(){
-		return this.ui.getText();
+            return this.ui.getText();
 	};
 	
 	this.setStatusText = function( statusText ){
@@ -51,6 +60,8 @@ var Player = function(){
 	};
 	
 	this.addChoice = function(choice){
+                choice.text = this.replaceStrings(choice.text);
+
 		this.choices.push(choice);
 		this.ui.addChoice( choice );
 		//external implementation

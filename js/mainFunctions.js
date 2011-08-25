@@ -8,6 +8,7 @@ var choicesFilterFunction = null;
 var jumped = false;//TODO: think on 'jump' function
 
 var globals = this;
+var vars = {};
 var showVarsMap = {};
 var constraintsMap = {};
 var showRangesArr = [];
@@ -19,7 +20,41 @@ var locationTextsMap = {};
 var intMap = {};
 
 //Main functions
+function reset(){
+    triggers = [];
+    prevPathText = "";
+    loc = null;
+    prevLocation = null;
+    path = null;
+    choicesFilterFunction = null;
+    jumped = false;//TODO: think on 'jump' function
+
+    globals = this;
+    vars = {};
+    showVarsMap = {};
+    constraintsMap = {};
+    showRangesArr = [];
+    boundMap = {};
+    pathPriorityMap = {};
+    pathPassabilityMap = {}
+    pathShowOrderMap = {};
+    locationTextsMap = {};
+    intMap = {};
+
+}
+
 function initPlayer(){
+        reset();
+
+        player.init();
+        player.actions();
+        for(var i in player.locations){
+                player.locations[i].init();
+                for(var j in player.locations[i].paths){
+                        player.locations[i].paths[j].init();
+                }
+        }
+
 	setChoicesFilterFunction(conditionsFilterFunction);
 	//TGE functionality
 	addTrigger( emptyLocationTrigger, 'pre');
@@ -29,9 +64,15 @@ function initPlayer(){
 	addTrigger( TrLocationTexts, "pre" );
 	addTrigger( ShowVars, "post" );
 	addTrigger( pathTextTrigger, 'post' );
-	
+        addTrigger( pathPassabilityTrigger, 'post');
+
 	var startLocation = player.startLocation();
 	onAnyLocationEnter(startLocation);
+}
+function questEnd(){
+    player.load("quests/main.json", function(){
+            initPlayer();
+    });
 }
 
 function addTrigger(func, type){
@@ -59,6 +100,15 @@ function playPreTriggers(){
 	return playTriggers('pre');
 }
 
+function pathPassabilityTrigger(){
+    if(path){
+        if(path.passability != 'inf'){
+            path.passability--;
+            if( path.passability < 0)
+                path.passability = 0;
+        }
+    }
+}
 
 function emptyLocationTrigger(){
 	//TGE functionality
@@ -102,7 +152,7 @@ function winTrigger(){
 	if( loc.type != 'win' )
 		return;
 	player.clearChoices();
-	player.addChoice({text : 'Конец квеста.', actions : function(){}});
+        player.addChoice({text : 'Конец квеста.', actions : function(){questEnd();}});
 }
 
 function failTrigger(){
@@ -110,7 +160,7 @@ function failTrigger(){
 	if( loc.type != 'fail' )
 		return;
 	player.clearChoices();
-	player.addChoice({text : 'Конец квеста.', actions : function(){}});	
+        player.addChoice({text : 'Конец квеста.', actions : function(){questEnd();}});
 
 }
 
@@ -119,7 +169,7 @@ function deathTrigger(){
 	if( loc.type != 'death' )
 		return;
 	player.clearChoices();
-	player.addChoice({text : 'Конец квеста.', actions : function(){}});
+        player.addChoice({text : 'Конец квеста.', actions : function(){questEnd();}});
 }
 function PrependAction(obj, func){
 	actions = obj.actions;
@@ -170,51 +220,84 @@ function defaultChoicesFilterFunction(loc){
 	return choices;
 }
 
-function conditionsFilterFunction(loc){
-	var choices = [];
-	for(var i in loc.paths){
-		var path = loc.paths[i];
-                var c = path.conditions();
-                if( c || path.alwaysShow){
-			choices.push({
-				text : path.question,
-				actions : function(){onAnyPathEnter(this.path);},//loc.paths[i].actions,
-				path : path,
-                                style : c ? 'default' : 'disabled'
-			});
-		}
-	}
-        choices = choices.sort(
-        function(a, b)
-        {
-            if( a.style == 'disabled' && b.style != 'disabled')
+function sortChoicesTGE(a, b){
+    if( a.style == 'disabled' && b.style != 'disabled')
+        return -1;
+    else if( a.style != 'disabled' && b.style == 'disabled')
+        return 1;
+    else if(a.style == 'disabled' && b.style == 'disabled')
+        return 0;
+    else
+    {
+        if(a.path.showOrder < b.path.showOrder)
+            return -1;
+        else if(a.path.showOrder > b.path.showOrder)
+            return 1;
+        else{
+            return 0;
+            var r = Math.random() * 9;
+            if( r < 3 )
                 return -1;
-            else if( a.style != 'disabled' && b.style == 'disabled')
-                return 1;
-            else if(a.style == 'disabled' && b.style == 'disabled')
+            if( r < 6 )
                 return 0;
-            else
-            {
-                if(a.path.showOrder < b.path.showOrder)
-                    return -1;
-                else if(a.path.showOrder > b.path.showOrder)
-                    return 1;
-                else{
-                    //return 0;
-                    var r = Math.random() * 9;
-                    if( r < 3 )
-                        return -1;
-                    if( r < 6 )
-                        return 0;
-                    return 1
+            return 1
 
-                }
-            }
+        }
+    }
+}
 
+function pathFromSporGroup( paths ){
+    var priorityTotal = 0;
+    paths = paths.sort(function(a,b){ return a.priority - b.priority;});
+    for(var i in paths){
+        priorityTotal += paths[i].priority;
+    }
+    var priorityCounter = 0;
+    var rnd = Math.random()*priorityTotal;
+    for(var i in paths){
+        priorityCounter+=paths[i].priority;
+        if( rnd < priorityCounter )
+            return paths[i];
+    }
+    alert('error in sporGroup Function');
+    return null;
+}
 
-        });
-        choices = choices.reverse();
-	return choices;
+function conditionsFilterFunction(loc){
+    var choices = [];
+    var sporGroupsMap = {};
+    //var sporGroups = [];
+    for(var i in loc.paths){
+        var path = loc.paths[i];
+        var g;
+        if( g = sporGroupsMap[path.question] ){
+            g.push(path);
+        }else{
+            sporGroupsMap[path.question] = [ path ];
+        }
+    }
+    for(var text in sporGroupsMap){
+        var g = sporGroupsMap[text];
+        var path = pathFromSporGroup(g);
+        if( g.length == 1 && Math.random() >= path.priority)
+            continue;
+        if( !path.passability )
+            continue;
+
+        var c = path.conditions();
+        if( c || path.alwaysShow){
+            choices.push({
+                    text : path.question,
+                    actions : function(){onAnyPathEnter(this.path);},//loc.paths[i].actions,
+                    path : path,
+                    style : c ? 'default' : 'disabled'
+            });
+        }
+    }
+
+    choices = choices.sort(sortChoicesTGE);
+    choices = choices.reverse();
+    return choices;
 }
 
 function showPathes(loc){
@@ -358,11 +441,13 @@ function AddShowRanges( varName, ranges, texts, show0 ){
 
 function SetPathPriority( pathId, value ){
         //pathPriorityMap[ pathId ] = value;
-    player.findPath(pathId).priority = value;
+    player.findPath(pathId).priority = parseFloat( value.toString().replace('.','.') );
 }
 
 function SetPathPassability( pathId, value ){
         //pathPassabilityMap[ pathId ] = value;
+    if(value == 0)
+        value = 'inf';
     player.findPath(pathId).passability = value;
 }
 
@@ -380,6 +465,10 @@ function AddLocationTexts( locationId, f, texts ){
 		"func":f,
 		"texts":texts
 		};
+}
+
+function AddToVars(name){
+    vars[name] = globals[name];
 }
 
 function SetLocationEmpty( locationId ){
@@ -408,7 +497,7 @@ function CheckConstraints( varName ){
 			clearDisplay();
 			player.setText(b.text);
 			player.clearChoices();
-			player.addChoice({text : 'Конец квеста.', actions : function(){}});
+                        player.addChoice({text : 'Конец квеста.', actions : function(){questEnd();}});
 			return 'jump';
 		}
 				
